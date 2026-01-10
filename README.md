@@ -7,6 +7,8 @@ Display your Claude Max/Pro subscription usage directly in the Claude Code statu
 ## Features
 
 - **Real-time subscription usage** from Anthropic API (same as `/usage` command)
+- **Reset time display** - Shows when your usage limits reset
+- **Sonnet-specific tracking** - Separate weekly usage for Sonnet models
 - **Color-coded warnings**:
   - 🟢 Green: 0-49%
   - 🟡 Yellow: 50-79%
@@ -17,16 +19,16 @@ Display your Claude Max/Pro subscription usage directly in the Claude Code statu
 ## Output Format
 
 ```
-Opus 4.5 | Ctx: 40% | Session: 63% | Week: 5% | my-project
+Opus 4.5 | Ctx: 44% | Session: 76% (11:00pm) | Week: All 6% / Sonnet 1% (Jan17 6:00pm)
 ```
 
 | Field | Description |
 |-------|-------------|
 | Model | Current Claude model (cyan) |
 | Ctx | Context window usage % |
-| Session | 5-hour cycle usage % (resets every 5 hours) |
-| Week | 7-day usage % (resets weekly) |
-| Directory | Current working directory |
+| Session | 5-hour cycle usage % with reset time |
+| Week All | 7-day usage % (all models) |
+| Week Sonnet | 7-day usage % (Sonnet only) with reset time |
 
 ## Requirements
 
@@ -83,11 +85,15 @@ The OAuth token is retrieved from macOS Keychain where Claude Code stores it.
 ```json
 {
   "five_hour": {
-    "utilization": 58,
+    "utilization": 76,
     "resets_at": "2026-01-10T14:00:00+00:00"
   },
   "seven_day": {
-    "utilization": 5,
+    "utilization": 6,
+    "resets_at": "2026-01-17T09:00:00+00:00"
+  },
+  "seven_day_sonnet": {
+    "utilization": 1,
     "resets_at": "2026-01-17T09:00:00+00:00"
   }
 }

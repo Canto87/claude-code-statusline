@@ -40,7 +40,7 @@ Opus 4.5 | Ctx: 40% | Session: 63% | Week: 5% | my-project
 ### Quick Install (one-liner)
 
 ```bash
-curl -o ~/.claude/statusline-command.sh https://raw.githubusercontent.com/YOUR_USERNAME/claude-code-statusline/main/statusline-command.sh && \
+curl -o ~/.claude/statusline-command.sh https://raw.githubusercontent.com/Canto87/claude-code-statusline/main/statusline-command.sh && \
 chmod +x ~/.claude/statusline-command.sh && \
 echo '{"statusLine":{"type":"command","command":"~/.claude/statusline-command.sh"}}' > ~/.claude/settings.json
 ```
@@ -49,7 +49,7 @@ echo '{"statusLine":{"type":"command","command":"~/.claude/statusline-command.sh
 
 1. Download the script:
 ```bash
-curl -o ~/.claude/statusline-command.sh https://raw.githubusercontent.com/YOUR_USERNAME/claude-code-statusline/main/statusline-command.sh
+curl -o ~/.claude/statusline-command.sh https://raw.githubusercontent.com/Canto87/claude-code-statusline/main/statusline-command.sh
 ```
 
 2. Make it executable:

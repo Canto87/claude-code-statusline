@@ -19,10 +19,17 @@ fetch_usage() {
     local token
     token=$(security find-generic-password -s "Claude Code-credentials" -w 2>/dev/null | jq -r '.claudeAiOauth.accessToken' 2>/dev/null)
     if [ -n "$token" ] && [ "$token" != "null" ]; then
-        curl -s "https://api.anthropic.com/api/oauth/usage" \
-            -H "Authorization: Bearer $token" \
-            -H "User-Agent: claude-code/2.0.32" \
-            -H "anthropic-beta: oauth-2025-04-20" 2>/dev/null
+        # Use temp config file to avoid exposing token in process list
+        local config_file=$(mktemp)
+        chmod 600 "$config_file"
+        cat > "$config_file" << EOF
+-s
+-H "Authorization: Bearer $token"
+-H "User-Agent: claude-code/2.0.32"
+-H "anthropic-beta: oauth-2025-04-20"
+EOF
+        curl -K "$config_file" "https://api.anthropic.com/api/oauth/usage" 2>/dev/null
+        rm -f "$config_file"
     fi
 }
 
@@ -39,7 +46,8 @@ fi
 if [ -z "$usage_json" ] || [ "$usage_json" = "null" ]; then
     usage_json=$(fetch_usage)
     if [ -n "$usage_json" ] && [ "$usage_json" != "null" ]; then
-        echo "$usage_json" > "$CACHE_FILE"
+        # Secure cache file permissions (owner read/write only)
+        (umask 077 && echo "$usage_json" > "$CACHE_FILE")
     fi
 fi
 

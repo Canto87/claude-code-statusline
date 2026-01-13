@@ -52,11 +52,12 @@ if [ -z "$usage_json" ] || [ "$usage_json" = "null" ]; then
 fi
 
 # Parse usage percentages and reset times
-five_hour_pct=$(echo "$usage_json" | jq -r '.five_hour.utilization // 0' 2>/dev/null)
+# Use floor to convert float to integer (API returns values like 22.5)
+five_hour_pct=$(echo "$usage_json" | jq -r '(.five_hour.utilization // 0) | floor' 2>/dev/null)
 five_hour_reset=$(echo "$usage_json" | jq -r '.five_hour.resets_at // ""' 2>/dev/null)
-seven_day_pct=$(echo "$usage_json" | jq -r '.seven_day.utilization // 0' 2>/dev/null)
+seven_day_pct=$(echo "$usage_json" | jq -r '(.seven_day.utilization // 0) | floor' 2>/dev/null)
 seven_day_reset=$(echo "$usage_json" | jq -r '.seven_day.resets_at // ""' 2>/dev/null)
-seven_day_sonnet_pct=$(echo "$usage_json" | jq -r '.seven_day_sonnet.utilization // 0' 2>/dev/null)
+seven_day_sonnet_pct=$(echo "$usage_json" | jq -r '(.seven_day_sonnet.utilization // 0) | floor' 2>/dev/null)
 
 [ "$five_hour_pct" = "null" ] && five_hour_pct=0
 [ "$seven_day_pct" = "null" ] && seven_day_pct=0

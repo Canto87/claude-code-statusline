@@ -1,65 +1,65 @@
-# Claude Code Status Line with Real-time Usage Limits
+<h1 align="center">claude-code-statusline</h1>
 
-Display your Claude Max/Pro subscription usage directly in the Claude Code status line.
+<p align="center">
+  <strong>Real-time subscription usage monitoring for Claude Code</strong>
+</p>
 
-![Screenshot](screenshot.png)
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a>
+  <img src="https://img.shields.io/badge/platform-macOS-lightgrey.svg" alt="Platform">
+  <img src="https://img.shields.io/badge/shell-bash-green.svg" alt="Shell: Bash">
+  <img src="https://img.shields.io/badge/requires-Claude%20Code%20CLI-blueviolet.svg" alt="Requires Claude Code">
+  <br>
+  <a href="README.md"><img src="https://img.shields.io/badge/🇺🇸_English-white.svg" alt="English"></a>
+  <a href="README.ko.md"><img src="https://img.shields.io/badge/🇰🇷_한국어-white.svg" alt="한국어"></a>
+  <a href="README.ja.md"><img src="https://img.shields.io/badge/🇯🇵_日本語-white.svg" alt="日本語"></a>
+</p>
 
-## Features
+<p align="center">
+  Displays your Claude Max/Pro subscription usage directly in the status line.<br>
+  Session limits, weekly caps, and context window — all visible at a glance.
+</p>
 
-- **Real-time subscription usage** from Anthropic API (same as `/usage` command)
-- **Reset time display** - Shows when your usage limits reset
-- **Sonnet-specific tracking** - Separate weekly usage for Sonnet models
-- **Color-coded warnings**:
-  - 🟢 Green: 0-49%
-  - 🟡 Yellow: 50-79%
-  - 🔴 Red: 80%+
-- **60-second cache** to minimize API calls
-- **Context window usage** tracking
+<p align="center">
+  <img src="screenshot.png" alt="Screenshot">
+</p>
 
-## Output Format
+---
+
+## The Problem
+
+Claude Code's `/usage` command shows your subscription limits, but:
+
+- **Invisible during work** — you have to stop and type `/usage` to check
+- **No warning before hitting limits** — you find out you're rate-limited only after a failed request
+- **Context blindness** — no idea how close you are to compaction until it happens
+
+## The Solution
+
+`claude-code-statusline` puts usage data where you can always see it:
 
 ```
-Opus 4.5 | Ctx: 44% | Session: 76% (11:00pm) | Week: All 6% / Sonnet 1% (Jan17 6:00pm)
+  Opus 4.5 | Ctx: 44% | Session: 77% (10:59pm) | Week: All 7% / Sonnet 1% (Jan17 5:59pm)
+  ────────   ────────   ──────────────────────   ─────────────────────────────────────────
+  Model      Context    5-hour cycle with        7-day cap (all models + Sonnet breakdown)
+             window %   reset time               with reset time
 ```
 
-| Field | Description |
-|-------|-------------|
-| Model | Current Claude model (cyan) |
-| Ctx | Context window usage % |
-| Session | 5-hour cycle usage % with reset time |
-| Week All | 7-day usage % (all models) |
-| Week Sonnet | 7-day usage % (Sonnet only) with reset time |
+Color-coded thresholds change as you approach limits — green → yellow → red.
 
-## Requirements
-
-- macOS (uses Keychain for OAuth token)
-- `jq` (JSON parser)
-- `curl`
-- Claude Code with Pro/Max subscription
-
-## Installation
-
-### Quick Install (one-liner)
+## Quick Start
 
 ```bash
-curl -o ~/.claude/statusline-command.sh https://raw.githubusercontent.com/Canto87/claude-code-statusline/main/statusline-command.sh && \
-chmod +x ~/.claude/statusline-command.sh && \
-echo '{"statusLine":{"type":"command","command":"~/.claude/statusline-command.sh"}}' > ~/.claude/settings.json
-```
+# Download
+curl -o ~/.claude/statusline-command.sh \
+  https://raw.githubusercontent.com/Canto87/claude-code-statusline/main/statusline-command.sh
 
-### Manual Install
-
-1. Download the script:
-```bash
-curl -o ~/.claude/statusline-command.sh https://raw.githubusercontent.com/Canto87/claude-code-statusline/main/statusline-command.sh
-```
-
-2. Make it executable:
-```bash
+# Make executable
 chmod +x ~/.claude/statusline-command.sh
 ```
 
-3. Add to `~/.claude/settings.json`:
+Add to `~/.claude/settings.json`:
+
 ```json
 {
   "statusLine": {
@@ -69,39 +69,50 @@ chmod +x ~/.claude/statusline-command.sh
 }
 ```
 
+> **Requirements:** macOS, `jq`, `curl`, Claude Code with Pro/Max subscription
+
 ## How It Works
 
-The script calls the Anthropic OAuth usage API:
+```
+  Claude Code runs status line command
+       │
+       ▼
+  Read OAuth token from macOS Keychain
+       │
+       ▼
+  GET /api/oauth/usage ──► Cache response (60s TTL)
+       │
+       ▼
+  Parse utilization % + reset times
+       │
+       ▼
+  Format with ANSI colors ──► Display in status line
+```
+
+The script calls the same API that `/usage` uses internally:
 
 ```
 GET https://api.anthropic.com/api/oauth/usage
 Authorization: Bearer <oauth_token>
 ```
 
-The OAuth token is retrieved from macOS Keychain where Claude Code stores it.
+The OAuth token is read from macOS Keychain where Claude Code stores it. No manual token configuration needed.
 
-### API Response Example
+## Output Format
 
-```json
-{
-  "five_hour": {
-    "utilization": 76,
-    "resets_at": "2026-01-10T14:00:00+00:00"
-  },
-  "seven_day": {
-    "utilization": 6,
-    "resets_at": "2026-01-17T09:00:00+00:00"
-  },
-  "seven_day_sonnet": {
-    "utilization": 1,
-    "resets_at": "2026-01-17T09:00:00+00:00"
-  }
-}
-```
+| Field | Description | Color Thresholds |
+|:------|:------------|:-----------------|
+| Model | Current Claude model | Cyan (always) |
+| Ctx | Context window usage % | 🟢 <50% · 🟡 50-79% · 🔴 80%+ |
+| Session | 5-hour cycle usage with reset time | 🟢 <50% · 🟡 50-79% · 🔴 80%+ |
+| Week All | 7-day usage across all models | 🟢 <50% · 🟡 50-79% · 🔴 80%+ |
+| Week Sonnet | 7-day Sonnet-specific usage with reset time | 🟢 <50% · 🟡 50-79% · 🔴 80%+ |
+
+When the API fetch fails (e.g., expired token, network issue), the status line shows `Usage: API Error` instead of misleading 0% values.
 
 ## Customization
 
-### Change Cache Duration
+### Cache Duration
 
 Edit `CACHE_MAX_AGE` in the script (default: 60 seconds):
 
@@ -109,7 +120,7 @@ Edit `CACHE_MAX_AGE` in the script (default: 60 seconds):
 CACHE_MAX_AGE=120  # 2 minutes
 ```
 
-### Change Color Thresholds
+### Color Thresholds
 
 Edit the `select_color` function:
 
@@ -130,23 +141,30 @@ select_color() {
 
 ### Status line not showing
 
-Check if the script works:
+Test the script directly:
+
 ```bash
-echo '{"model":{"display_name":"Test"},"workspace":{"current_dir":"/test"},"context_window":{"context_window_size":200000,"current_usage":null}}' | ~/.claude/statusline-command.sh
+echo '{}' | ~/.claude/statusline-command.sh
 ```
+
+### Usage shows "API Error"
+
+Check if the OAuth token is accessible:
+
+```bash
+security find-generic-password -s "Claude Code-credentials" -w | jq '.claudeAiOauth.accessToken' | head -c 20
+```
+
+If empty, re-login with `/login` in Claude Code.
 
 ### Usage always shows 0%
 
-- Make sure you're logged into Claude Code (`/login`)
-- Check if OAuth token exists:
+Delete the stale cache and retry:
+
 ```bash
-security find-generic-password -s "Claude Code-credentials" -w
+rm ~/.claude/usage-cache.json
 ```
 
 ## License
 
-MIT
-
-## Contributing
-
-Issues and PRs welcome!
+[MIT](LICENSE)

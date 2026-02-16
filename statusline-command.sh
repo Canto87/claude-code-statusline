@@ -59,9 +59,15 @@ seven_day_pct=$(echo "$usage_json" | jq -r '(.seven_day.utilization // 0) | floo
 seven_day_reset=$(echo "$usage_json" | jq -r '.seven_day.resets_at // ""' 2>/dev/null)
 seven_day_sonnet_pct=$(echo "$usage_json" | jq -r '(.seven_day_sonnet.utilization // 0) | floor' 2>/dev/null)
 
-[ "$five_hour_pct" = "null" ] && five_hour_pct=0
-[ "$seven_day_pct" = "null" ] && seven_day_pct=0
-[ "$seven_day_sonnet_pct" = "null" ] && seven_day_sonnet_pct=0
+if [ -z "$five_hour_pct" ] || [ "$five_hour_pct" = "null" ]; then
+    five_hour_pct=0
+fi
+if [ -z "$seven_day_pct" ] || [ "$seven_day_pct" = "null" ]; then
+    seven_day_pct=0
+fi
+if [ -z "$seven_day_sonnet_pct" ] || [ "$seven_day_sonnet_pct" = "null" ]; then
+    seven_day_sonnet_pct=0
+fi
 
 # Format reset times to local timezone
 format_reset_time() {
@@ -194,6 +200,16 @@ session_reset_str=""
 
 week_reset_str=""
 [ -n "$week_reset_display" ] && week_reset_str=" (${week_reset_display})"
+
+# Debug: detect API fetch failure
+if [ "$five_hour_pct" = "0" ] && [ "$seven_day_pct" = "0" ] && [ "$seven_day_sonnet_pct" = "0" ]; then
+    if [ -z "$usage_json" ] || [ "$usage_json" = "null" ]; then
+        printf "${CYAN}%s${RESET} ${DIM}|${RESET} Ctx: ${ctx_color}%d%%${RESET} ${DIM}|${RESET} ${RED}Usage: API Error${RESET}" \
+            "$model_name" \
+            "$context_pct"
+        exit 0
+    fi
+fi
 
 # Format output with colors
 # Format: Model | Ctx: X% | Session: X% (HH:MMpm) | Week: All X% / Sonnet X% (MonDD HH:MMpm)
